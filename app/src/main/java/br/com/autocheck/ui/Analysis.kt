@@ -39,7 +39,7 @@ internal fun MainActivity.diagnosis(body: LinearLayout) {
         body.addView(label("PERGUNTA $index DE $total",12f,true,C.accent));gap(body,10)
         val bar = View(this).apply { background=bg(C.accent,5) }
         val progress = LinearLayout(this).apply { background=bg(C.raised,6);addView(bar,LinearLayout.LayoutParams(0,d(6),index.toFloat()))
-            addView(View(this),LinearLayout.LayoutParams(0,d(6),(total-index).toFloat())) }
+            addView(View(context),LinearLayout.LayoutParams(0,d(6),(total-index).toFloat())) }
         body.addView(progress,LinearLayout.LayoutParams(-1,d(6)));gap(body,18)
         val question = s.problem.question(s.node)
         if(question==null) {notice(body,"Houve uma inconsistência no fluxo de perguntas. Reinicie a consulta.",true);return}
