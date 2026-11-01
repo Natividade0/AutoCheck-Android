@@ -30,7 +30,7 @@ import java.util.Locale
 
 internal fun MainActivity.render() {
         root.removeAllViews()
-    val content = ScrollView(this).apply { fillViewport = false; clipToPadding = false }
+    val content = ScrollView(this).apply { isFillViewport = false; clipToPadding = false }
     val body = col(18).apply { setPadding(d(18),d(20),d(18),d(30)) }
         content.addView(body)
         root.addView(content,LinearLayout.LayoutParams(-1,0,1f))
