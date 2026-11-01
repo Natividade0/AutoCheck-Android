@@ -1,42 +1,55 @@
 name: Gerar APK Android
+
 on:
   workflow_dispatch:
   push:
     branches: [main]
+
+permissions:
+  contents: read
+
 jobs:
   apk:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - uses: actions/checkout@v4
-      - name: Montar catálogo offline
+      - name: Obter projeto
+        uses: actions/checkout@v4
+
+      - name: Gerar e validar catálogo offline
         run: |
           python tools/build_catalog.py
           python tools/validate_catalog.py
-      - uses: actions/setup-java@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - name: Instalar SDK
-        run: yes | sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
-      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Configurar SDK Android 35
+        shell: bash
+        run: |
+          set -e
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "sdkmanager não encontrado na imagem do GitHub" >&2
+            exit 1
+          fi
+          "$SDKMANAGER" --install "platforms;android-35" "build-tools;35.0.0" </dev/null
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
-      - name: Salvar catálogo gerado no GitHub
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app/src/main/assets/catalog.json
-          if ! git diff --cached --quiet; then
-            git commit -m "Adicionar base de sintomas offline"
-            git push
-          fi
-      - name: Compilar APK debug
+
+      - name: Compilar AutoCheck (APK de teste)
         run: gradle --no-daemon :app:assembleDebug
-      - uses: actions/upload-artifact@v4
+
+      - name: Disponibilizar APK
+        uses: actions/upload-artifact@v4
         with:
           name: AutoCheck-v1-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          retention-days: 30
